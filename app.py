@@ -1,8 +1,7 @@
 from flask import Flask, render_template, jsonify
-import random  # <-- Make sure this import is present!
+import random  
 import logging
 import os
-from propagation import compute_mgf  # Import our propagation computation function
 
 app = Flask(__name__)
 
@@ -15,35 +14,6 @@ logging.basicConfig(
     level=logging.DEBUG if app.debug else logging.INFO,
     format='%(asctime)s %(levelname)s %(message)s'
 )
-
-# New endpoint for computing propagation metrics
-@app.route('/metrics')
-def propagation_metrics():
-    app.logger.debug("Entering /metrics endpoint")
-    
-    # Define a sample threshold distribution function F(x)
-    def F(x):
-        # For demonstration: a simple linear threshold function (assumes x in [0, 1])
-        return x
-
-    # Maximum number of neighbors
-    N = 10
-    # Define a uniform neighbor distribution: p(k) = 1/(N+1) for k = 0, 1, …, N
-    p = lambda k: 1.0 / (N + 1)
-    
-    try:
-        # Compute MGF and its derivatives using our implementation
-        G0, G1, G2 = compute_mgf(F, p, N)
-        app.logger.info("Computed propagation metrics: G0=%f, G1=%f, G2=%f", G0, G1, G2)
-    except Exception as e:
-        app.logger.error("Error computing propagation metrics: %s", e)
-        # Assign default values in case of error
-        G0, G1, G2 = 0, 0, 0
-    
-    # Package computed values in a dictionary (here named propagation) to pass to the template.
-    metrics = {'G0': G0, 'G1': G1, 'G2': G2}
-    return render_template('graph.html', metrics=metrics)
-
 
 # The home page; if no metrics are computed, propagation will be undefined in the template.
 @app.route('/')

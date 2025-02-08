@@ -25,8 +25,8 @@ The name `fcose` stands for **Fast Compound Spring Embedder**. It is inspired by
 
 1. **Clone the Repository:**
    ```bash
-   git clone <repository-url>
-   cd <repository-directory>
+   git clone https://github.com/jmg421/cytoscape-fcose.git
+   cd cytoscape-fcose
    ```
 
 2. **Install npm Dependencies:**
