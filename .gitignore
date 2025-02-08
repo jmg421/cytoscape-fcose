@@ -1,1 +1,7 @@
-venv/
+# Node & Python artifacts:
+node_modules/
+__pycache__/
+*.pyc
+.env
+dist/
+static/js/*.map

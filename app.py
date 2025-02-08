@@ -1,0 +1,82 @@
+from flask import Flask, render_template, jsonify
+import random  # <-- Make sure this import is present!
+import logging
+import os
+from propagation import compute_mgf  # Import our propagation computation function
+
+app = Flask(__name__)
+
+# Set production configuration unless explicitly set otherwise
+app.config['DEBUG'] = os.environ.get('FLASK_DEBUG', 'False') == 'True'
+app.config['ENV'] = os.environ.get('FLASK_ENV', 'production')
+
+# Configure logging: use DEBUG level if in debug mode, otherwise INFO
+logging.basicConfig(
+    level=logging.DEBUG if app.debug else logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s'
+)
+
+# New endpoint for computing propagation metrics
+@app.route('/metrics')
+def propagation_metrics():
+    app.logger.debug("Entering /metrics endpoint")
+    
+    # Define a sample threshold distribution function F(x)
+    def F(x):
+        # For demonstration: a simple linear threshold function (assumes x in [0, 1])
+        return x
+
+    # Maximum number of neighbors
+    N = 10
+    # Define a uniform neighbor distribution: p(k) = 1/(N+1) for k = 0, 1, …, N
+    p = lambda k: 1.0 / (N + 1)
+    
+    try:
+        # Compute MGF and its derivatives using our implementation
+        G0, G1, G2 = compute_mgf(F, p, N)
+        app.logger.info("Computed propagation metrics: G0=%f, G1=%f, G2=%f", G0, G1, G2)
+    except Exception as e:
+        app.logger.error("Error computing propagation metrics: %s", e)
+        # Assign default values in case of error
+        G0, G1, G2 = 0, 0, 0
+    
+    # Package computed values in a dictionary (here named propagation) to pass to the template.
+    metrics = {'G0': G0, 'G1': G1, 'G2': G2}
+    return render_template('graph.html', metrics=metrics)
+
+
+# The home page; if no metrics are computed, propagation will be undefined in the template.
+@app.route('/')
+def index():
+    app.logger.debug("Rendering index page")
+    return render_template('index.html')
+
+
+# Route to view the network graph visualization
+@app.route('/graph')
+def graph():
+    app.logger.info("Rendering graph page with Cytoscape fcose layout")
+    # Pass an empty dictionary for propagation to ensure consistency in the template
+    return render_template('graph.html', propagation={})
+
+
+# API endpoint that returns graph data as JSON.
+@app.route('/graph_data')
+def graph_data():
+    app.logger.info("Generating graph data")
+    # Generate sample graph data for visualization purposes
+    nodes = [{'data': {'id': str(i), 'label': f'Node {i}'}} for i in range(1, 21)]
+    edges = []
+    for i in range(1, 21):
+        target = random.randint(1, 20)
+        if target != i:
+            edges.append({'data': {'source': str(i), 'target': str(target)}})
+    app.logger.debug("Generated %d nodes and %d edges.", len(nodes), len(edges))
+    graph_payload = {'nodes': nodes, 'edges': edges}
+    app.logger.debug("Graph data payload: %s", graph_payload)
+    return jsonify(graph_payload)
+
+
+if __name__ == '__main__':
+    # In production, use a proper WSGI server (e.g. Gunicorn or uWSGI) instead of app.run()
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

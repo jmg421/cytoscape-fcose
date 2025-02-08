@@ -1,72 +1,24 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
+  <head>
+    <meta charset="UTF-8">
     <title>Graph Visualization</title>
-    <!-- Cytoscape core library -->
-    <script src="https://unpkg.com/cytoscape@3.24.0/dist/cytoscape.min.js"></script>
-    <!-- fcose layout extension -->
-    <script src="https://unpkg.com/cytoscape-fcose@2.3.1/cytoscape-fcose.js"></script>
+    <!-- Load Cytoscape from a CDN -->
+    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+    <!-- Load the bundled fcose layout plugin (which now includes cose-base) -->
+    <script src="/static/js/cytoscape-fcose.bundle.js"></script>
     <script>
-      // Register the fcose layout extension with Cytoscape.
-      cytoscape.use(cytoscapeFcose);
+      // Register the fcose layout with Cytoscape.
+      if (typeof cytoscapeFcose !== 'undefined') {
+          cytoscape.use(cytoscapeFcose);
+      } else {
+          console.error("cytoscapeFcose is not defined. Ensure that the fcose bundle is loaded correctly.");
+      }
     </script>
-    <style>
-        html, body {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-        }
-        #cy {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-         }
-    </style>
-</head>
-<body>
-    <div id="cy"></div>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-          fetch('/graph_data')
-            .then(response => response.json())
-            .then(elements => {
-                var cy = cytoscape({
-                    container: document.getElementById('cy'),
-                    elements: elements,
-                    style: [
-                        {
-                            selector: 'node',
-                            style: {
-                                'label': 'data(label)',
-                                'background-color': '#61bffc',
-                                'text-valign': 'center',
-                                'color': '#000',
-                                'width': 40,
-                                'height': 40
-                            }
-                        },
-                        {
-                            selector: 'edge',
-                            style: {
-                                'width': 2,
-                                'line-color': '#ccc',
-                                'target-arrow-color': '#ccc',
-                                'target-arrow-shape': 'triangle'
-                            }
-                        }
-                    ],
-                    layout: {
-                        name: 'fcose',
-                        animate: true,
-                        randomize: true,
-                        quality: "proof"
-                    }
-                });
-            });
-      });
-    </script>
-</body>
+  </head>
+  <body>
+    <div id="cy" style="width:100%; height:600px;"></div>
+    <!-- Now load your graph initialization code -->
+    <script src="/static/js/graph.js"></script>
+  </body>
 </html>
