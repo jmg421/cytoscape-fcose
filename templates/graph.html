@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Graph Visualization</title>
+    <!-- Cytoscape core library -->
+    <script src="https://unpkg.com/cytoscape@3.24.0/dist/cytoscape.min.js"></script>
+    <!-- fcose layout extension -->
+    <script src="https://unpkg.com/cytoscape-fcose@2.3.1/cytoscape-fcose.js"></script>
+    <script>
+      // Register the fcose layout extension with Cytoscape.
+      cytoscape.use(cytoscapeFcose);
+    </script>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #cy {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+         }
+    </style>
+</head>
+<body>
+    <div id="cy"></div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+          fetch('/graph_data')
+            .then(response => response.json())
+            .then(elements => {
+                var cy = cytoscape({
+                    container: document.getElementById('cy'),
+                    elements: elements,
+                    style: [
+                        {
+                            selector: 'node',
+                            style: {
+                                'label': 'data(label)',
+                                'background-color': '#61bffc',
+                                'text-valign': 'center',
+                                'color': '#000',
+                                'width': 40,
+                                'height': 40
+                            }
+                        },
+                        {
+                            selector: 'edge',
+                            style: {
+                                'width': 2,
+                                'line-color': '#ccc',
+                                'target-arrow-color': '#ccc',
+                                'target-arrow-shape': 'triangle'
+                            }
+                        }
+                    ],
+                    layout: {
+                        name: 'fcose',
+                        animate: true,
+                        randomize: true,
+                        quality: "proof"
+                    }
+                });
+            });
+      });
+    </script>
+</body>
+</html>
