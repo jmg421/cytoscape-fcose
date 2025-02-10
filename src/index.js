@@ -17,8 +17,11 @@ class FcoseLayout {
     const cy = this.options.cy;
     // Use the provided element collection, if available
     const nodes = this.options.eles ? this.options.eles.nodes() : cy.nodes();
-    // If no nodes are available, exit gracefully.
+    // If no nodes are available, notify that the layout is done and exit gracefully.
     if (nodes.length === 0) {
+      if (this.options.done) {
+        this.options.done();
+      }
       return;
     }
     

@@ -1,3 +1,5 @@
+import cytoscape from 'cytoscape';
+
 export let cy = null;  // This will hold the Cytoscape instance
 
 export function initCy() {
@@ -20,24 +22,26 @@ export function initCy() {
                     {
                         selector: 'node',
                         style: {
-                            'background-color': '#666',
-                            'label': 'data(label)',
-                            'text-valign': 'center',
+                            'content': 'data(label)',
+                            'background-color': '#0074D9',
                             'color': '#fff',
-                            'width': '40px',
-                            'height': '40px',
-                            'font-size': '12px',
-                            'border-width': '2px',
-                            'border-color': '#ccc'
+                            'text-valign': 'center',
+                            'font-size': '10px'
                         }
                     },
                     {
                         selector: 'edge',
                         style: {
-                            'width': 3,
+                            'content': 'data(label)',
+                            'width': 2,
                             'line-color': '#ccc',
                             'target-arrow-shape': 'triangle',
-                            'target-arrow-color': '#ccc'
+                            'target-arrow-color': '#ccc',
+                            'curve-style': 'bezier',
+                            'font-size': '10px',
+                            'color': '#000',
+                            'text-rotation': 'autorotate',
+                            'text-margin-y': -5
                         }
                     },
                     {

@@ -7,16 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Load Cytoscape from a CDN -->
     <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
-    <!-- Load the bundled fcose layout plugin -->
-    <script src="/static/js/cytoscape-fcose.bundle.js"></script>
-    <script>
-      if (typeof cytoscapeFcose !== 'undefined') {
-          cytoscape.use(cytoscapeFcose);
-      } else {
-          console.error("cytoscapeFcose is not defined. Ensure that the fcose bundle is loaded correctly.");
-      }
-    </script>
-    <script type="module" src="/static/js/main.js"></script>
   </head>
   <body>
     <div class="container my-3">
@@ -25,73 +15,92 @@
          <button id="add-node-btn" class="btn btn-primary">Add Node</button>
          <button id="add-edge-btn" class="btn btn-secondary">Add Edge</button>
          <button id="remove-selected-btn" class="btn btn-danger">Remove Selected</button>
+         <button id="submit-edge-btn" class="btn btn-success">Submit Edge</button>
       </div>
     </div>
     <!-- Graph Container -->
     <div id="cy" style="width: 100%; height: 600px; border: 1px solid #ccc;"></div>
     
+    <!-- Load the FCose layout plugin bundle (built from src/index.js) -->
+    <script src="/static/js/cytoscape-fcose.bundle.js"></script>
+    <script>
+      // Check that the plugin global export is available and register it.
+      if (typeof fcose !== 'undefined') {
+        cytoscape.use(fcose);
+        console.log("fcose layout registered");
+      } else {
+        console.error("fcose layout is not defined. Check your bundle!");
+      }
+    </script>
+    
+    <!-- Load the demo application bundle (built from demo/main.js) -->
+    <script src="/static/js/main.bundle.js"></script>
+    
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
     <!-- Add Node Modal -->
-    <div class="modal fade" id="addNodeModal" tabindex="-1" aria-labelledby="addNodeModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addNodeModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 id="addNodeModalLabel" class="modal-title">Add Node</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form id="add-node-form">
+          <form id="add-node-form">
+            <div class="modal-header">
+              <h5 class="modal-title">Add Node</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
               <div class="mb-3">
-                <label for="node-id" class="form-label">Node ID</label>
-                <input type="text" class="form-control" id="node-id" required>
-              </div>
-              <div class="mb-3">
-                <label for="node-label" class="form-label">Node Label</label>
+                <label for="node-label" class="form-label">Label</label>
                 <input type="text" class="form-control" id="node-label">
               </div>
               <div class="mb-3">
-                <label for="node-position" class="form-label">Initial Position (x,y)</label>
-                <input type="text" class="form-control" id="node-position" placeholder="e.g., 100,100">
-                <div class="form-text">Leave blank to position automatically.</div>
+                <label for="node-position" class="form-label">Position (x,y)</label>
+                <input type="text" class="form-control" id="node-position" placeholder="e.g., 100,200">
               </div>
+            </div>
+            <div class="modal-footer">
               <button type="submit" class="btn btn-primary">Add Node</button>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
       </div>
     </div>
     
     <!-- Add Edge Modal -->
-    <div class="modal fade" id="addEdgeModal" tabindex="-1" aria-labelledby="addEdgeModalLabel" aria-hidden="true">
+    <div class="modal fade" id="addEdgeModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 id="addEdgeModalLabel" class="modal-title">Add Edge</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form id="add-edge-form">
+          <form id="add-edge-form">
+            <div class="modal-header">
+              <h5 class="modal-title">Add Edge</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
               <div class="mb-3">
-                <label for="edge-id" class="form-label">Edge ID</label>
-                <input type="text" class="form-control" id="edge-id" required>
+                <label for="edge-source-select" class="form-label">Source Node</label>
+                <select class="form-select" id="edge-source-select">
+                  <option value="">Select a node</option>
+                </select>
               </div>
               <div class="mb-3">
-                <label for="edge-source" class="form-label">Source Node ID</label>
-                <select id="edge-source-select" class="form-control"></select>
+                <label for="edge-target-select" class="form-label">Target Node</label>
+                <select class="form-select" id="edge-target-select">
+                  <option value="">Select a node</option>
+                </select>
               </div>
               <div class="mb-3">
-                <label for="edge-target" class="form-label">Target Node ID</label>
-                <select id="edge-target-select" class="form-control"></select>
+                <label for="edge-label" class="form-label">Label (Optional)</label>
+                <input type="text" class="form-control" id="edge-label">
               </div>
-              <button type="submit" class="btn btn-secondary">Add Edge</button>
-            </form>
-          </div>
+            </div>
+            <div class="modal-footer">
+              <!-- You may include a dedicated button for creating an edge if needed -->
+              <button type="button" id="create-edge-btn" class="btn btn-secondary">Create Edge from Selected</button>
+              <button type="submit" class="btn btn-primary">Add Edge</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
-    
-    <!-- Bootstrap JS Bundle (includes Popper) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Graph Initialization and Management Script -->
-    <script src="/static/js/graph.js"></script>
   </body>
 </html>

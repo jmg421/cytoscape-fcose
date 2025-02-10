@@ -2155,14 +2155,56 @@ var SVD = __webpack_require__(551).SVD;
 function ConstraintHandler() {}
 
 ConstraintHandler.handleConstraints = function (layout) {
-  //  let layout = this.graphManager.getLayout();
+  // Fix: Extract constraints from layout (or use an empty object as default)
+  var constraints = layout.constraints || {};
+
+  // A - target configuration
+  var sourceMatrix = []; 
+  // B - source configuration 
+  var standardTransformation = false; // false for no transformation, true for standard transformation
+  var reflectionType = false; // reflection check
+  var fixedNodes = new Set();
+  var dag = new Map(); // adjacency list for relative placement constraints
+  var dagUndirected = new Map(); // undirected version of the dag
+  var components = []; // weakly connected components
+
+  // fill fixedNodes collection to use later
+  if (constraints.fixedNodeConstraint) {
+    constraints.fixedNodeConstraint.forEach(function (nodeData) {
+      fixedNodes.add(nodeData.nodeId);
+    });
+  }
+
+  // construct dag from relative placement constraints 
+  if (constraints.relativePlacementConstraint) {
+    // construct both directed and undirected version of the dag
+    constraints.relativePlacementConstraint.forEach(function (constraint) {
+      if (constraint.left) {
+        if (dag.has(constraint.left)) {
+          dag.get(constraint.left).push({ id: constraint.right, gap: constraint.gap, direction: "horizontal" });
+        } else {
+          dag.set(constraint.left, [{ id: constraint.right, gap: constraint.gap, direction: "horizontal" }]);
+        }
+        if (!dag.has(constraint.right)) {
+          dag.set(constraint.right, []);
+        }
+      } else {
+        if (dag.has(constraint.top)) {
+          dag.get(constraint.top).push({ id: constraint.bottom, gap: constraint.gap, direction: "vertical" });
+        } else {
+          dag.set(constraint.top, [{ id: constraint.bottom, gap: constraint.gap, direction: "vertical" }]);
+        }
+        if (!dag.has(constraint.bottom)) {
+          dag.set(constraint.bottom, []);
+        }
+      }
+    });
+
+    dagUndirected = dagToUndirected(dag);
+    components = findComponents(dagUndirected);
+  }
 
   // get constraints from layout
-  var constraints = {};
-  constraints.fixedNodeConstraint = layout.constraints.fixedNodeConstraint;
-  constraints.alignmentConstraint = layout.constraints.alignmentConstraint;
-  constraints.relativePlacementConstraint = layout.constraints.relativePlacementConstraint;
-
   var idToNodeMap = new Map();
   var nodeIndexes = new Map();
   var xCoords = [];
@@ -2616,49 +2658,13 @@ ConstraintHandler.handleConstraints = function (layout) {
   /* construct source and target configurations */
 
   var targetMatrix = []; // A - target configuration
-  var sourceMatrix = []; // B - source configuration 
-  var standardTransformation = false; // false for no transformation, true for standart (Procrustes) transformation (rotation and/or reflection)
-  var reflectionType = false; // false/true for reflection check, 'reflectOnX', 'reflectOnY' or 'reflectOnBoth' for reflection type if necessary
-  var fixedNodes = new Set();
-  var dag = new Map(); // adjacency list to keep directed acyclic graph (dag) that consists of relative placement constraints
-  var dagUndirected = new Map(); // undirected version of the dag
-  var components = []; // weakly connected components
-
-  // fill fixedNodes collection to use later
-  if (constraints.fixedNodeConstraint) {
-    constraints.fixedNodeConstraint.forEach(function (nodeData) {
-      fixedNodes.add(nodeData.nodeId);
-    });
-  }
-
-  // construct dag from relative placement constraints 
-  if (constraints.relativePlacementConstraint) {
-    // construct both directed and undirected version of the dag
-    constraints.relativePlacementConstraint.forEach(function (constraint) {
-      if (constraint.left) {
-        if (dag.has(constraint.left)) {
-          dag.get(constraint.left).push({ id: constraint.right, gap: constraint.gap, direction: "horizontal" });
-        } else {
-          dag.set(constraint.left, [{ id: constraint.right, gap: constraint.gap, direction: "horizontal" }]);
-        }
-        if (!dag.has(constraint.right)) {
-          dag.set(constraint.right, []);
-        }
-      } else {
-        if (dag.has(constraint.top)) {
-          dag.get(constraint.top).push({ id: constraint.bottom, gap: constraint.gap, direction: "vertical" });
-        } else {
-          dag.set(constraint.top, [{ id: constraint.bottom, gap: constraint.gap, direction: "vertical" }]);
-        }
-        if (!dag.has(constraint.bottom)) {
-          dag.set(constraint.bottom, []);
-        }
-      }
-    });
-
-    dagUndirected = dagToUndirected(dag);
-    components = findComponents(dagUndirected);
-  }
+  // var sourceMatrix = []; // (Removed duplicate)
+  // var standardTransformation = false; // (Removed duplicate)
+  // var reflectionType = false;        // (Removed duplicate)
+  // var fixedNodes = new Set();        // (Removed duplicate)
+  // var dag = new Map();               // (Removed duplicate)
+  // var dagUndirected = new Map();     // (Removed duplicate)
+  // var components = [];               // (Removed duplicate)
 
   if (CoSEConstants.TRANSFORM_ON_CONSTRAINT_HANDLING) {
     // first check fixed node constraint
